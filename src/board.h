@@ -1,9 +1,9 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#define U64 unsigned long long;
+typedef unsigned long long U64;
 
-struct board
+typedef struct
 {
     U64 white_pawns;
     U64 white_knights;
@@ -23,11 +23,24 @@ struct board
     U64 black_pieces;
     U64 all_pieces;
 
+    int move_number;
+
+    char white_castle_k;
+    char white_castle_q;
+    char black_castle_k;
+    char black_castle_q;
+
     char white_to_move;
 
     char fifty_move_rule;
 
     char en_passant_loc;
-};
+} BOARD_t;
+
+BOARD_t* new_board(char[]);
+void print_bitboard(U64);
+void print_board(BOARD_t*);
+char alg_loc_to_int(char,char);
+void make_move(BOARD_t*,MOVE_t*);
 
 #endif
