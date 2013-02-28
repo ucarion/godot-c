@@ -3,12 +3,18 @@
 
 typedef int MOVE_t;
 
-#define MOVE_PAWN 0
-#define MOVE_KNIGHT 1
-#define MOVE_BISHOP 2
-#define MOVE_ROOK 3
-#define MOVE_QUEEN 4
-#define MOVE_KING 5
+#define MOVE_WHITE_PAWN 0
+#define MOVE_BLACK_PAWN 1
+#define MOVE_WHITE_KNIGHT 2
+#define MOVE_BLACK_KNIGHT 3
+#define MOVE_WHITE_BISHOP 4
+#define MOVE_BLACK_BISHOP 5
+#define MOVE_WHITE_ROOK 6
+#define MOVE_BLACK_ROOK 7
+#define MOVE_WHITE_QUEEN 8
+#define MOVE_BLACK_QUEEN 9
+#define MOVE_WHITE_KING 10
+#define MOVE_BLACK_KING 11
 
 #define MOVE_FLAG_NO_FLAG 0
 #define MOVE_FLAG_OO 1
