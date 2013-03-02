@@ -29,6 +29,8 @@ BOARD_t* new_empty_board()
     board->black_castle_q = 0;
 
     board->move_number = 0;
+    board->end_of_search = 0;
+
     board->white_to_move = 0;
     board->fifty_move_rule = 0;
     board->en_passant_loc = -1;
@@ -246,7 +248,7 @@ void print_board(BOARD_t* board)
     printf("Black can castle: %s %s\n", board->black_castle_k ? "O-O" : "", board->black_castle_q ? "O-O-O" : "");
     printf("En passant: %d\n", board->en_passant_loc);
     printf("Fifty move rule: %d\n", board->fifty_move_rule);
-    printf("Move number: %d\n", board->move_number);
+    printf("Ply number: %d\n", board->move_number);
     printf("\n");
 }
 
@@ -281,8 +283,7 @@ void make_move(BOARD_t* board, MOVE_t move)
     flag = get_flag(move);
     move_mask = from_mask | to_mask;
     
-    if (!board->white_to_move)
-        board->move_number++;
+    board->move_number++;
 
     board->fifty_move_rule++;
 
