@@ -261,7 +261,7 @@ void update_special_bitboards(BOARD_t* board)
     board->all_pieces = board->white_pieces | board->black_pieces;
 }
 
-void make_move(BOARD_t* board, MOVE_t* move)
+void make_move(BOARD_t* board, MOVE_t move)
 {
     char from;
     char to;
@@ -272,13 +272,13 @@ void make_move(BOARD_t* board, MOVE_t* move)
     char flag;
     U64 move_mask;
 
-    from = get_from(*move);
-    to = get_to(*move);
+    from = get_from(move);
+    to = get_to(move);
     from_mask = 1ULL << from;
     to_mask = 1ULL << to;
-    piece = get_piece(*move);
-    is_capt = is_capture(*move);
-    flag = get_flag(*move);
+    piece = get_piece(move);
+    is_capt = is_capture(move);
+    flag = get_flag(move);
     move_mask = from_mask | to_mask;
     
     if (!board->white_to_move)

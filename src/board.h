@@ -47,6 +47,6 @@ void print_bitboard(U64);
 void print_board(BOARD_t*);
 char alg_loc_to_int(char,char);
 void update_special_bitboards(BOARD_t*);
-void make_move(BOARD_t*,MOVE_t*);
+void make_move(BOARD_t*,MOVE_t);
 
 #endif
