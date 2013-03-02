@@ -1,6 +1,11 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#define WHITE 0
+#define BLACK 1
+
+#include "move.h"
+
 typedef unsigned long long U64;
 
 typedef struct
@@ -41,6 +46,7 @@ BOARD_t* new_board(char[]);
 void print_bitboard(U64);
 void print_board(BOARD_t*);
 char alg_loc_to_int(char,char);
+void update_special_bitboards(BOARD_t*);
 void make_move(BOARD_t*,MOVE_t*);
 
 #endif
