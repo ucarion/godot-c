@@ -13,7 +13,6 @@ typedef unsigned long long U64;
 
 typedef struct 
 {
-    MOVE_t move;
     char white_castle_k;
     char white_castle_q;
     char black_castle_k;
@@ -45,7 +44,8 @@ typedef struct
     U64 black_pieces;
     U64 all_pieces;
 
-    // history[move_number + end_of_search] is the deepest we've searched to
+    // history[end_of_search] is the deepest we've gone, the furthest search
+    // deptch achieved is end_of_search - move_number.
     int move_number;   // indexes to history
     int end_of_search; // indexes to history
 
@@ -59,11 +59,17 @@ typedef struct
     char en_passant_loc;
 } BOARD_t;
 
+RECORD_t* new_record(BOARD_t*);
+BOARD_t* new_empty_board(void);
 BOARD_t* new_board(char[]);
 void print_bitboard(U64);
 void print_board(BOARD_t*);
-char alg_loc_to_int(char,char);
+char alg_loc_to_int(char, char);
 void update_special_bitboards(BOARD_t*);
-void make_move(BOARD_t*,MOVE_t);
+void make_move(BOARD_t*, MOVE_t);
+void unmake_move(BOARD_t*, MOVE_t);
+void unmake_capture(BOARD_t*, U64, char);
+void unmake_white_promotion(BOARD_t*, U64, char);
+void unmake_black_promotion(BOARD_t*, U64, char);
 
 #endif

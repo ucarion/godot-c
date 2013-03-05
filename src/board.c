@@ -5,7 +5,24 @@
 #include <stdbool.h>
 #include "board.h"
 
-BOARD_t* new_empty_board()
+// creates a new record for the board, and increments its end_of_search
+RECORD_t* new_record(BOARD_t* board)
+{
+    RECORD_t* record = malloc(sizeof(RECORD_t));
+
+    record->white_castle_k = board->white_castle_k;
+    record->white_castle_q = board->white_castle_q;
+    record->black_castle_k = board->black_castle_k;
+    record->black_castle_q = board->black_castle_q;
+    record->en_passant_loc = board->en_passant_loc;
+    record->fifty_move_rule = board->fifty_move_rule;
+
+    board->end_of_search++;
+
+    return record;
+}
+
+BOARD_t* new_empty_board(void)
 {
     BOARD_t* board = malloc(sizeof(BOARD_t));
 
@@ -248,7 +265,7 @@ void print_board(BOARD_t* board)
     printf("Black can castle: %s %s\n", board->black_castle_k ? "O-O" : "", board->black_castle_q ? "O-O-O" : "");
     printf("En passant: %d\n", board->en_passant_loc);
     printf("Fifty move rule: %d\n", board->fifty_move_rule);
-    printf("Ply number: %d\n", board->move_number);
+    printf("Ply number: %d\n", board->end_of_search);
     printf("\n");
 }
 
@@ -270,16 +287,20 @@ void make_move(BOARD_t* board, MOVE_t move)
     U64 from_mask;
     U64 to_mask;
     char piece;
-    bool is_capt;
+    char capt;
     char flag;
     U64 move_mask;
+
+    // save the history
+    board->movelist[board->end_of_search] = move;
+    board->history[board->end_of_search] = *new_record(board);
 
     from = get_from(move);
     to = get_to(move);
     from_mask = 1ULL << from;
     to_mask = 1ULL << to;
     piece = get_piece(move);
-    is_capt = is_capture(move);
+    capt = get_capture(move);
     flag = get_flag(move);
     move_mask = from_mask | to_mask;
     
@@ -287,7 +308,7 @@ void make_move(BOARD_t* board, MOVE_t move)
 
     board->fifty_move_rule++;
 
-    if (is_capt)
+    if (capt)
     {
         char to_remove;
         U64 to_remove_mask;
@@ -452,4 +473,236 @@ void make_move(BOARD_t* board, MOVE_t move)
     }
 
     board->white_to_move = (board->white_to_move ? 0 : 1);
+}
+
+void unmake_move(BOARD_t* board, MOVE_t move)
+{
+    char from;
+    char to;
+    U64 from_mask;
+    U64 to_mask;
+    char piece;
+    char capt;
+    char flag;
+    U64 move_mask;
+
+    from = get_from(move);
+    to = get_to(move);
+    from_mask = 1ULL << from;
+    to_mask = 1ULL << to;
+    piece = get_piece(move);
+    capt = get_capture(move);
+    flag = get_flag(move);
+    move_mask = from_mask | to_mask;
+
+    switch (piece)
+    {
+        case MOVE_WHITE_PAWN:
+            // if the last move was a promo, then there is no pawn at TO;
+            // thus, this will create a pawn at both FROM and TO. We get
+            // rid of this extra pawn in unmake_white_promotion.
+            board->white_pawns ^= move_mask;
+
+            if (capt)
+            {
+                if (flag == MOVE_FLAG_EP)
+                    board->black_pawns |= 1ULL << (to - 8);
+                else
+                    unmake_capture(board, to_mask, capt);
+            }
+
+            if (is_promotion(move))
+                unmake_white_promotion(board, to_mask, flag);
+            break;
+        case MOVE_BLACK_PAWN:
+            // see comment for case MOVE_WHITE_PAWN.
+            board->black_pawns ^= move_mask;
+
+            if (capt)
+            {
+                if (flag == MOVE_FLAG_EP)
+                    board->white_pawns |= 1ULL << (to + 8);
+                else
+                    unmake_capture(board, to_mask, capt);
+            }
+
+            if (is_promotion(move))
+                unmake_black_promotion(board, to_mask, flag);
+            break;
+        case MOVE_WHITE_KNIGHT:
+            board->white_knights ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_BLACK_KNIGHT:
+            board->black_knights ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_WHITE_BISHOP:
+            board->white_bishops ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_BLACK_BISHOP:
+            board->black_bishops ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_WHITE_ROOK:
+            board->white_rooks ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_BLACK_ROOK:
+            board->black_rooks ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_WHITE_QUEEN:
+            board->white_queens ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_BLACK_QUEEN:
+            board->black_queens ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+            break;
+        case MOVE_WHITE_KING:
+            board->white_king ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+
+            if (flag == MOVE_FLAG_OO)
+            {
+                U64 rook_move_mask = (1ULL << 5) | (1ULL << 7);
+                board->white_rooks ^= rook_move_mask;
+            }
+            else if (flag == MOVE_FLAG_OOO)
+            {
+                U64 rook_move_mask = 1ULL | (1ULL << 3);
+                board->white_rooks ^= rook_move_mask;
+            }
+            break;
+        case MOVE_BLACK_KING:
+            board->black_king ^= move_mask;
+
+            if (capt)
+                unmake_capture(board, to_mask, capt);
+
+            if (flag == MOVE_FLAG_OO)
+            {
+                U64 rook_move_mask = (1ULL << (5 + 56)) | (1ULL << (7 + 56));
+                board->black_rooks ^= rook_move_mask;
+            }
+            else if (flag == MOVE_FLAG_OOO)
+            {
+                U64 rook_move_mask = (1ULL << 56) | (1ULL << (3 + 56));
+                board->black_rooks ^= rook_move_mask;
+            }
+            break;
+    }
+
+    // now go back in time ...
+    board->end_of_search--;
+    board->white_castle_k = board->history[board->end_of_search].white_castle_k;
+    board->white_castle_q = board->history[board->end_of_search].white_castle_q;
+    board->black_castle_k = board->history[board->end_of_search].black_castle_k;
+    board->black_castle_q = board->history[board->end_of_search].black_castle_q;
+    board->en_passant_loc = board->history[board->end_of_search].en_passant_loc;
+    board->fifty_move_rule = board->history[board->end_of_search].fifty_move_rule;
+
+    board->white_to_move = (board->white_to_move ? 0 : 1);
+}
+
+// handles replacing a captured piece; this won't work for ep captures
+void unmake_capture(BOARD_t* board, U64 sq, char piece)
+{
+    switch (piece)
+    {
+        case MOVE_WHITE_PAWN:
+            board->white_pawns |= sq;
+            break;
+        case MOVE_BLACK_PAWN:
+            board->black_pawns |= sq;
+            break;
+        case MOVE_WHITE_KNIGHT:
+            board->white_knights |= sq;
+            break;
+        case MOVE_BLACK_KNIGHT:
+            board->black_knights |= sq;
+            break;
+        case MOVE_WHITE_BISHOP:
+            board->white_bishops |= sq;
+            break;
+        case MOVE_BLACK_BISHOP:
+            board->black_bishops |= sq;
+            break;
+        case MOVE_WHITE_ROOK:
+            board->white_rooks |= sq;
+            break;
+        case MOVE_BLACK_ROOK:
+            board->black_rooks |= sq;
+            break;
+        case MOVE_WHITE_QUEEN:
+            board->white_queens |= sq;
+            break;
+        case MOVE_BLACK_QUEEN:
+            board->black_queens |= sq;
+            break;
+    }
+}
+
+// undoes a white promotion; this function assumes there is a white
+// pawn at both FROM and TO.
+void unmake_white_promotion(BOARD_t* board, U64 to, char flag)
+{
+    board->white_pawns &= ~to; // remove the pawn that isn't there
+    switch (flag) // remove the promoted piece
+    {
+        case MOVE_FLAG_PROMO_KNIGHT:
+            board->white_knights &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_BISHOP:
+            board->white_bishops &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_ROOK:
+            board->white_rooks &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_QUEEN:
+            board->white_queens &= ~to;
+            break;
+    }
+}
+
+// undoes a black promotion; this function assumes there is a black
+// pawn at both FROM and TO.
+void unmake_black_promotion(BOARD_t* board, U64 to, char flag)
+{
+    board->black_pawns &= ~to;
+    switch (flag)
+    {
+        case MOVE_FLAG_PROMO_KNIGHT:
+            board->black_knights &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_BISHOP:
+            board->black_bishops &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_ROOK:
+            board->black_rooks &= ~to;
+            break;
+        case MOVE_FLAG_PROMO_QUEEN:
+            board->black_queens &= ~to;
+            break;
+    }
 }
