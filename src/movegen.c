@@ -238,7 +238,6 @@ void init_slidingmoves(void)
                     break;
                 
                 slide++;
-            
             }
 
             if (i > 0)
