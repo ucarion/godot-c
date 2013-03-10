@@ -1,6 +1,8 @@
 #ifndef MOVE_H
 #define MOVE_H
 
+#include <stdbool.h>
+
 typedef int MOVE_t;
 
 #define MOVE_NO_PIECE 0

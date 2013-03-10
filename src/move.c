@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include "move.h"
 
 // A move is represented in bits, which are allocated as follows:
