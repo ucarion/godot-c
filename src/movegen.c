@@ -8,6 +8,7 @@ void init_movegen(void)
     init_filemasks();
     init_a1h8masks();
     init_a8h1masks();
+    init_slidingmoves();
 }
 
 void init_kinglocs(void) 
@@ -193,6 +194,68 @@ void init_a8h1masks(void)
             int j;
             for (j = 2; j < 15 - diag; j++)
                 a8h1mask[i] |= to_bitboard(diag + j - 8, 8 - j);
+        }
+    }
+}
+
+void init_slidingmoves(void)
+{
+    int i;
+    unsigned char charmask[8];
+
+    charmask[0] = 1;
+    for (i = 1; i < 8; i++)
+        charmask[i] = charmask[i - 1] << 1;
+
+    for (i = 0; i < 8; i++)
+    {
+        unsigned char state6b; // 6 bits representing occupancy
+
+        for (state6b = 0; state6b < 64; state6b++)
+        {
+            unsigned char state8b;
+            unsigned char attacks;
+            unsigned char slide;
+
+            // the 6-bit one goes from (1..6); this one
+            // goes from (0..7).
+            state8b = state6b << 1;
+            attacks = 0;
+
+            sliding_moves[i][state6b] = 0;
+
+            if (i < 7)
+                attacks |= charmask[i + 1];
+
+            // TODO: Implement this with do..while loops
+
+            slide = i + 2;
+            while (slide <= 7)
+            {
+                if ((~state8b) & charmask[slide - 1])
+                    attacks |= charmask[slide];
+                else 
+                    break;
+                
+                slide++;
+            
+            }
+
+            if (i > 0)
+                attacks |= charmask[i - 1];
+            
+            slide = i - 2;
+            while (slide >= 0)
+            {
+                if ((~state8b) & charmask[slide + 1])
+                    attacks |= charmask[slide];
+                else 
+                    break;
+                
+                slide--;
+            }
+
+            sliding_moves[i][state6b] = attacks;
         }
     }
 }
