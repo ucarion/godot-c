@@ -196,15 +196,3 @@ void init_a8h1masks(void)
         }
     }
 }
-
-int main()
-{
-    int i;
-
-    init_movegen();
-
-    for (i = 0; i < 64; i++) {
-        printf("%d", i);
-        print_bitboard(a8h1mask[i]);
-    }
-}
