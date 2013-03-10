@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 #include "board.h"
 
 // creates a new record for the board, and increments its end_of_search

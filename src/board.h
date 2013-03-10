@@ -1,6 +1,12 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #include "move.h"
 
 #define WHITE 0
